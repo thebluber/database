@@ -75,7 +75,7 @@ struct Connection *Database_load(const char *filename, char mode) {
   if(!conn->db) die(conn, "Memory error");
 
   //open file
-  conn->file = fopen(filename, "r+");
+  conn->file = fopen(filename, "r");
   if(!conn->file) die(conn, "Failed to open the file");
 
   //load max_data/max_rows
@@ -125,7 +125,9 @@ struct Connection *Database_init(const char *filename, const int max_data, const
 }
 
 
-void Database_write(struct Connection *conn) {
+void Database_write(const char *filename, struct Connection *conn) {
+  //open new file stream for writing
+  conn->file = freopen(filename, "w", conn->file);
   //set the pointer to beginning
   rewind(conn->file);
 
@@ -278,7 +280,7 @@ int main(int argc, char *argv[]) {
       max_data = atoi(argv[3]);
       max_rows = atoi(argv[4]);
       conn = Database_init(filename, max_data, max_rows);
-      Database_write(conn);
+      Database_write(filename, conn);
       break;
     case 'g':
       if(argc != 4) die(conn, "Need an id to get");
@@ -291,14 +293,14 @@ int main(int argc, char *argv[]) {
       id = atoi(argv[3]);
       conn = Database_load(filename, action);
       Database_set(conn, id, argv[4], argv[5]);
-      Database_write(conn);
+      Database_write(filename, conn);
       break;
     case 'd':
       if(argc != 4) die(conn, "Need id to delete");
       id = atoi(argv[3]);
       conn = Database_load(filename, action);
       Database_delete(conn, id);
-      Database_write(conn);
+      Database_write(filename, conn);
       break;
     case 'l':
       conn = Database_load(filename, action);
